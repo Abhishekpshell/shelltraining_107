@@ -1,0 +1,35 @@
+# Minimal email sending helper (Python)
+# Adapt this to your real implementation if needed.
+
+from email.message import EmailMessage
+import smtplib
+
+def send_email(smtp_host: str,
+               smtp_port: int,
+               username: str | None,
+               password: str | None,
+               from_addr: str,
+               to_addrs: list[str],
+               subject: str,
+               body: str,
+               use_tls: bool = True) -> bool:
+    if not to_addrs:
+        raise ValueError("to_addrs must not be empty")
+
+    msg = EmailMessage()
+    msg["From"] = from_addr
+    msg["To"] = ", ".join(to_addrs)
+    msg["Subject"] = subject
+    msg.set_content(body)
+
+    try:
+        with smtplib.SMTP(smtp_host, smtp_port, timeout=10) as smtp:
+            if use_tls:
+                smtp.starttls()
+            if username:
+                smtp.login(username, password)
+            smtp.send_message(msg)
+        return True
+    except Exception:
+        # Re-raise so callers/tests can observe the error
+        raise
